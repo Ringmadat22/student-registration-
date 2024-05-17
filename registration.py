@@ -3,11 +3,10 @@ import pickle
 import os.path
 
 class Course:
-    def __init__(self, dept, num, name, credits):
+    def __init__(self, dept, num, name, hours):
         self.dept = dept
-        self.num = num
         self.name = name
-        self.credits = credits
+        self.hours = hours
 
 class CourseOffering:
     def __init__(self, course, section, year, quarter):
@@ -49,42 +48,21 @@ def create_course(institution):
     dept = input('Please enter department code: ')
     num = int(input('Please enter a course number: '))
     name = input('Please enter name: ')
-    credits = int(input('Please enter number of credits: '))
-    course = Course(dept, num, name, credits)
+    hours = int(input('Please enter number of hours: '))
+    course = Course(dept, num, name, hours)
     institution['courses'][(dept, num)] = course
     print('\n' + course.name + ' added to course list!\n')
 
-def schedule_course_offering(institution):
-    key = input('Course Name: ')
-    if key in institution['courses']:
-        course = institution['courses'][key]
-        section = int(input('Please enter a section number: '))
-        quarter = input('Please enter quarter (Fall, Winter, Spring, Summer): ')
-        year = int(input('Please enter year (YYYY): '))
-        course_offering = CourseOffering(course, section, year, quarter)
-        institution['course_offerings'][(course.dept, course.num, section, year, quarter)] = course_offering
-        print('\n' + course_offering.__str__() + ' has been scheduled!\n')
-    else:
-        print('This course is not currently offered. Please add new course or select from the following offerings: \n')
 
 def list_course_catalog(institution):
     print('\nCourse Catalog:')
     for key, course in institution['courses'].items():
-        print(f"{key}: {course.name}, Credits: {course.credits}")
-    print()
-
-def list_course_schedule(institution):
-    quarter = input('Please enter quarter (Fall, Winter, Spring, Summer): ')
-    year = int(input('Please enter year (YYYY): '))
-    print('\nCourse Schedule:')
-    for key, course_offering in institution['course_offerings'].items():
-        if course_offering.quarter == quarter and course_offering.year == year:
-            print(course_offering)
+        print(f"{key}: {course.name}, hours: {course.hours}")
     print()
 
 def hire_instructor(institution):
-    last_name = input('Please enter instructor last name: ')
     first_name = input('Please enter instructor first name: ')
+    last_name = input('Please enter instructor last name: ')
     year = int(input('Please enter year (YYYY): '))
     month = int(input('Please enter birth month (MM): '))
     day = int(input('Please enter birth day (DD): '))
@@ -162,12 +140,6 @@ def list_students_registered_for_course(institution):
     else:
         print('Invalid course.\n')
 
-def list_faculty(institution):
-    print('\nFaculty:')
-    for username, instructor in institution['instructors'].items():
-        print(f"{instructor.first_name} {instructor.last_name} ({username})")
-    print()
-
 def submit_student_grade(institution):
     username = input('Student username: ')
     course_name = input('Course name: ')
@@ -226,35 +198,29 @@ def main():
         'MENU\n'
         '----------------------------------------\n'
         '1 Create a course\n'
-        '2 Schedule a course offering\n'
-        '3 List course catalog\n'
-        '4 List course schedule\n'
-        '5 Hire an instructor\n'
-        '6 Assign an instructor to a course\n'
-        '7 Enroll a student\n'
-        '8 Register a student for a course\n'
-        '9 List enrolled students\n'
-        '10 List students registered for a course\n'
-        '11 List faculty\n'
-        '12 Submit student grade\n'
-        '13 Get student records\n'
-        '14 EXIT\n'
+        '2 List course catalog\n'
+        '4 Hire an instructor\n'
+        '5 Assign an instructor to a course\n'
+        '6 Enroll a student\n'
+        '7 Register a student for a course\n'
+        '8 List enrolled students\n'
+        '9 List students registered for a course\n'
+        '11 Submit student grade\n'
+        '12 Get student records\n'
+        '13 EXIT\n'
     )
 
     menu_options = {
         '1': create_course,
-        '2': schedule_course_offering,
-        '3': list_course_catalog,
-        '4': list_course_schedule,
-        '5': hire_instructor,
-        '6': assign_instructor,
-        '7': enroll_student,
-        '8': register_student,
-        '9': list_enrolled_students,
-        '10': list_students_registered_for_course,
-        '11': list_faculty,
-        '12': submit_student_grade,
-        '13': get_student_records
+        '2': list_course_catalog,
+        '4': hire_instructor,
+        '5': assign_instructor,
+        '6': enroll_student,
+        '7': register_student,
+        '8': list_enrolled_students,
+        '9': list_students_registered_for_course,
+        '11': submit_student_grade,
+        '12': get_student_records
     }
 
     while True:
