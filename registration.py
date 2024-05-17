@@ -1,5 +1,6 @@
 import datetime
 import pickle
+import os.path
 
 class Course:
     def __init__(self, dept, num, name, credits):
@@ -203,9 +204,11 @@ def main():
 
     if load_existing == 'yes':
         file_path = input('Please enter the filepath: ')  # must be a .pickle file
-        with open(file_path, 'rb') as pickle_file:
-            institution = pickle.load(pickle_file)  # load existing registration
-
+        if os.path.exists(file_path):
+            with open(file_path, 'rb') as pickle_file:
+                institution = pickle.load(pickle_file)  # load existing registration
+        else:
+            print("File does not exist.")
     else:  # create a new institution dictionary
         name = input('Please enter an institution name: ')
         domain = input('Please enter a domain name (format = <institution>.edu): ')
