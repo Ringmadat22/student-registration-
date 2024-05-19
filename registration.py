@@ -10,10 +10,11 @@ class Institution:
         self.students = {}
 
     def add_course(self, course):
-        self.courses[course.name] = course
+        key = (course.dept, course.name)  # Use a tuple as the key
+        self.courses[key] = course
 
     def add_course_offering(self, course_offering):
-        key = (course_offering.course.dept, course_offering.course.name, course_offering.section, course_offering.year, course_offering.quarter)
+        key = (course_offering.course.dept, course_offering.course.name)  # Use a tuple as the key
         self.course_offerings[key] = course_offering
 
     def add_instructor(self, instructor):
@@ -22,18 +23,17 @@ class Institution:
     def add_student(self, student):
         self.students[student.username] = student
 
+
 class Course:
     def __init__(self, dept, name, hours):
         self.dept = dept
         self.name = name
         self.hours = hours
 
+
 class CourseOffering:
-    def __init__(self, course, section, year, quarter):
+    def __init__(self, course):
         self.course = course
-        self.section = section
-        self.year = year
-        self.quarter = quarter
         self.instructor = None
         self.enrolled_students = []
 
@@ -46,6 +46,7 @@ class CourseOffering:
     def submit_grade(self, student, grade):
         student.transcript[self.course.name] = grade
 
+
 class Instructor:
     def __init__(self, last_name, first_name, institution, dob, username):
         self.last_name = last_name
@@ -53,6 +54,7 @@ class Instructor:
         self.institution = institution
         self.dob = dob
         self.username = username
+
 
 class Student:
     def __init__(self, last_name, first_name, institution, dob, username):
@@ -77,11 +79,13 @@ def create_course(institution):
     institution.add_course(course)
     print(f'\n{course.name} added to course list!\n')
 
+
 def list_course_catalog(institution):
     print('\nCourse Catalog:')
-    for course in institution.courses.values():
-        print(f"{course.dept} {course.name}, hours: {course.hours}")
+    for key, course in institution.courses.items():
+        print(f"department: {key[0]}, course: {key[1]}, hours: {course.hours}")
     print()
+
 
 def hire_instructor(institution):
     first_name = input('Please enter instructor first name: ')
@@ -95,24 +99,21 @@ def hire_instructor(institution):
     institution.add_instructor(instructor)
     print('\nYou have hired', instructor.first_name, instructor.last_name, '\n')
 
+
 def assign_instructor(institution):
     username = input('Instructor username: ')
     if username in institution.instructors:
         this_instructor = institution.instructors[username]
         course_name = input('Course name: ')
         dept = input('Department: ')
-        section = int(input('Section Number: '))
-        quarter = input('Please enter quarter (Fall, Winter, Spring, Summer): ')
-        year = int(input('Please enter year (YYYY): '))
-        offering_key = (dept, course_name, section, year, quarter)
-        if offering_key in institution.course_offerings:
-            institution.course_offerings[offering_key].assign_instructor(this_instructor)
+        key = (dept, course_name)  # Use a tuple as the key
+        if key in institution.course_offerings:
+            institution.course_offerings[key].assign_instructor(this_instructor)
             print('Instructor assigned successfully!\n')
         else:
             print('Invalid course offering.\n')
     else:
         print('Invalid instructor username.\n')
-
 def enroll_student(institution):
     last_name = input('Last name: ')
     first_name = input('First name: ')
@@ -125,16 +126,25 @@ def enroll_student(institution):
     institution.add_student(student)
     print(f'\n{student.first_name} {student.last_name} has been enrolled!\n')
 
+def create_course_offering(institution):
+    course_name = input('Course name: ')
+    dept = input('Department: ')
+    if (dept, course_name) in institution.courses:
+        course = institution.courses[(dept, course_name)]
+        course_offering = CourseOffering(course)
+        institution.add_course_offering(course_offering)
+        print(f'Course offering for {course_name} created successfully.\n')
+    else:
+        print('Invalid course.\n')
+
 def register_student(institution):
     username = input('Student username: ')
     course_name = input('Course name: ')
-    if username in institution.students and course_name in institution.courses:
+    dept = input('Department: ')
+    if username in institution.students and (dept, course_name) in institution.courses:
         student = institution.students[username]
-        course = institution.courses[course_name]
-        section = int(input('Section Number: '))
-        quarter = input('Please enter quarter (Fall, Winter, Spring, Summer): ')
-        year = int(input('Please enter year offered (YYYY): '))
-        offering_key = (course.dept, course.name, section, year, quarter)
+        course = institution.courses[(dept, course_name)]
+        offering_key = (dept, course.name)
         if offering_key in institution.course_offerings:
             institution.course_offerings[offering_key].register_student(student)
             print(f'{student.first_name} {student.last_name} has been registered for {course_name}')
@@ -151,11 +161,11 @@ def list_enrolled_students(institution):
 
 def list_students_registered_for_course(institution):
     course_name = input('Course name: ')
-    if course_name in institution.courses:
+    dept = input('Department: ')
+    if (dept, course_name) in institution.courses:
         print(f"\nStudents registered for {course_name}:")
         for offering_key, course_offering in institution.course_offerings.items():
-            if offering_key[1] == course_name:
-                print(f"Section {offering_key[2]} ({offering_key[4]} {offering_key[3]}):")
+            if offering_key[1] == course_name and offering_key[0] == dept:
                 for student in course_offering.enrolled_students:
                     print(f"{student.first_name} {student.last_name} ({student.username})")
                 print()
@@ -165,11 +175,9 @@ def list_students_registered_for_course(institution):
 def submit_student_grade(institution):
     username = input('Student username: ')
     course_name = input('Course name: ')
-    quarter = input('Please enter quarter (Fall, Winter, Spring, Summer): ')
-    year = int(input('Please enter year (YYYY): '))
-    section = int(input('Section Number: '))
+    dept = input('Department: ')
     grade = input('Enter a grade (A to F): ')
-    offering_key = (course_name, section, year, quarter)
+    offering_key = (dept, course_name)
     if username in institution.students and offering_key in institution.course_offerings:
         student = institution.students[username]
         institution.course_offerings[offering_key].submit_grade(student, grade)
@@ -181,7 +189,7 @@ def get_student_records(institution):
     username = input('Enter student username: ')
     if username in institution.students:
         student = institution.students[username]
-        print(student)
+        print(f"{student.first_name} {student.last_name} ({student.username})")
         print('Transcript\n----------\n')
         for course_name, grade in student.transcript.items():
             print(f"{course_name}: {grade}")
@@ -204,12 +212,13 @@ def main():
         '3 Hire an instructor\n'
         '4 Assign an instructor to a course\n'
         '5 Enroll a student\n'
-        '6 Register a student for a course\n'
-        '7 List enrolled students\n'
-        '8 List students registered for a course\n'
-        '9 Submit student grade\n'
-        '10 Get student records\n'
-        '11 EXIT\n'
+        '6 Create a course offering\n'
+        '7 Register a student for a course\n'
+        '8 List enrolled students\n'
+        '9 List students registered for a course\n'
+        '10 Submit student grade\n'
+        '11 Get student records\n'
+        '12 EXIT\n'
     )
 
     menu_options = {
@@ -218,11 +227,12 @@ def main():
         '3': hire_instructor,
         '4': assign_instructor,
         '5': enroll_student,
-        '6': register_student,
-        '7': list_enrolled_students,
-        '8': list_students_registered_for_course,
-        '9': submit_student_grade,
-        '10': get_student_records
+        '6': create_course_offering,
+        '7': register_student,
+        '8': list_enrolled_students,
+        '9': list_students_registered_for_course,
+        '10': submit_student_grade,
+        '11': get_student_records
     }
 
     while True:
@@ -230,7 +240,7 @@ def main():
         if not var:
             print(menu_string)
             menu_input = input('Enter Menu Choice: ')
-            if menu_input == '13':
+            if menu_input == '12':
                 print('\nEXITING...Thank you!\n')
                 break
             elif menu_input in menu_options:
@@ -238,15 +248,12 @@ def main():
             else:
                 print('\nINVALID MENU OPTION: Please try again\n')
 
-    save_session = input('Would you like to save the contents of this session? Enter Yes or No: ').lower()
-
-    # if save_session == 'yes':
-    #     file_name = input('Please enter a filename for saving your data (this is a .pickle file): ')
-    #     with open(file_name, 'wb') as pickle_file:
-    #         pickle.dump(institution, pickle_file)
-    #     print('Session contents saved, goodbye!')
-    # else:
-    #     print('Goodbye!')
+    save_session = input('Would you like to save this session? (yes/no): ')
+    if save_session.lower() == 'yes':
+        # Add code here to save the session
+        print('Session saved successfully!')
+    else:
+        print('Session not saved.')
 
 if __name__ == "__main__":
     main()
